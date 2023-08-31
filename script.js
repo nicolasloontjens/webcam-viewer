@@ -1,44 +1,33 @@
-console.log("Use deviceId query param to request a specific device.");
-
 navigator.mediaDevices
   .enumerateDevices()
   .then((devices) =>
-    devices.filter((d) => d.kind === "videoinput" || d.kind === "audioinput")
+    devices.filter((device) => device.kind === "videoinput")
   )
   .then((devices) =>
     devices
-      .map((d) => {
-        return "[" + d.kind + "] " + d.label + ": " + d.deviceId;
+      .map((device) => {
+        return {
+          kind: device.kind,
+          label: device.label,
+          deviceId: device.deviceId
+        }
       })
-      .join("\n\n")
   )
-  .then(console.log);
+  .then((devices)=>{
+    startVideo(devices);
+  });
 
-const urlParams = new URLSearchParams(window.location.search);
-const videoDeviceId = urlParams.get("deviceId");
-const audioDeviceId = urlParams.get("audioDeviceId");
-
-function startVideo() {
+function startVideo(devices) {
   const constraints = {
     video: { width: 1920, height: 1080 },
     audio: false,
   };
 
+  let videoDeviceId = devices.filter((device) => device.kind === "videoinput")[0].deviceId;
+
   if (videoDeviceId) {
     constraints.video.deviceId = { exact: videoDeviceId };
   }
-
-  if (audioDeviceId) {
-    constraints.audio = {
-      deviceId: { exact: audioDeviceId },
-      autoGainControl: false,
-      echoCancellation: false,
-      googAutoGainControl: false,
-      noiseSuppression: false,
-    };
-  }
-
-  console.log({ constraints });
   
   navigator.mediaDevices
     .getUserMedia(constraints)
@@ -60,5 +49,3 @@ function enterFullscreen() {
     element.webkitRequestFullscreen();
   }
 }
-
-startVideo();
